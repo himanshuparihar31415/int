@@ -51,7 +51,7 @@ export default function DashboardView({
             <span>Autonomous Domain Knowledge Agent Online</span>
           </div>
           <h2 className="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight leading-tight">
-            Meet Intellion. A general-purpose knowledge domain agent built for dynamic conceptual schema mapping, semantic operations, and domain verification.
+            Onboard Intellion once. It ingests how your business runs, builds a living model of your domain, and performs like a veteran that never needs re-training.
           </h2>
           <p className="text-xs text-slate-500 leading-relaxed max-w-2xl">
             Unlike static record-and-replay crawlers, Intellion dynamically explores application states, maps structured components to logical domain schemas, and validates knowledge coherence in real time.

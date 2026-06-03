@@ -16,7 +16,21 @@ import {
   Send, 
   Cpu, 
   HelpCircle,
-  Loader2
+  Loader2,
+  Compass,
+  Play,
+  ArrowRight,
+  Lock,
+  CreditCard,
+  Home,
+  Search,
+  User,
+  ShoppingBag,
+  Percent,
+  Star,
+  Gift,
+  Truck,
+  RotateCcw
 } from 'lucide-react';
 import { successComparisonMetrics } from '../mockData';
 
@@ -383,9 +397,9 @@ test('verify eStore Swift critical checkout flows', async ({ page }) => {
       icon: <SlidersIcon className="w-3.5 h-3.5 text-indigo-500" />
     },
     {
-      title: "Confidence Metrics Review",
-      text: "Compare confidence status scores for nodes in our active graph and explain what cause them to decay below 80%.",
-      icon: <Zap className="w-3.5 h-3.5 text-amber-500" />
+      title: "Verify Checkout Paths",
+      text: "How many checkout paths are available?",
+      icon: <Compass className="w-3.5 h-3.5 text-blue-500" />
     },
     {
       title: "Pipeline Selector Specs",
@@ -1077,6 +1091,7 @@ test('verify eStore Swift critical checkout flows', async ({ page }) => {
 // Inline custom Markdown Renderer designed for pristine UI and fast execution
 function FormattedAnswer({ text }: { text: string }) {
   const lines = text.split('\n');
+  const isCheckoutPathsAnswer = text.toLowerCase().includes("checkout path") || text.toLowerCase().includes("guest happy path") || text.toLowerCase().includes("how many checkout paths");
 
   return (
     <div className="space-y-2.5 text-slate-700 text-xs leading-relaxed font-sans">
@@ -1142,6 +1157,13 @@ function FormattedAnswer({ text }: { text: string }) {
           </p>
         );
       })}
+
+      {/* RENDER THE DETAILED GRAPHICAL SANDBOX INTERACTIVE GRAPH WHEN CHECKOUT PATHS ARE BEING REVIEWED */}
+      {isCheckoutPathsAnswer && (
+        <div className="pt-2">
+          <CheckoutPathsVisualizer />
+        </div>
+      )}
     </div>
   );
 }
@@ -1202,5 +1224,697 @@ function SlidersIcon(props: React.SVGProps<SVGSVGElement>) {
       <line x1="10" x2="14" y1="8" y2="8" />
       <line x1="18" x2="22" y1="16" y2="16" />
     </svg>
+  );
+}
+
+// --------------------------------------------------------------------
+// DETAILED METADATA FOR THE 12 CHECKOUT PATHS WITH CORRESPONDING STEPS
+// --------------------------------------------------------------------
+export interface CheckoutPath {
+  id: number;
+  name: string;
+  codename: string;
+  complexity: 'Simple' | 'Medium' | 'Complex';
+  steps: string[];
+  description: string;
+}
+
+export const CHECKOUT_PATHS: CheckoutPath[] = [
+  {
+    id: 1,
+    name: "Guest happy path",
+    codename: "PATH-GUEST-HAPPY",
+    complexity: "Medium",
+    steps: ["Home", "Search", "Product", "Add to Cart", "View Cart", "Guest Checkout", "Shipping", "Payment", "Review", "Confirmation"],
+    description: "Standard checkout flow for unregistered users. Validates standard guest form fields and cart totals coherence."
+  },
+  {
+    id: 2,
+    name: "Returning customer fast path",
+    codename: "PATH-VIP-EXPRESS",
+    complexity: "Simple",
+    steps: ["Login", "Category", "Product", "Add to Cart", "Checkout", "Saved Address", "Saved Card", "Confirmation"],
+    description: "Ultra-fast direct pipeline accessing stored billing tokens & pre-saved addresses for registered returned customers."
+  },
+  {
+    id: 3,
+    name: "Express wallet path",
+    codename: "PATH-EXPRESS-WALLET",
+    complexity: "Simple",
+    steps: ["Product", "Wallet Sheet", "Confirmation"],
+    description: "Direct buy action with quick express providers like Apple Pay or Google Pay, bypassing multi-step address worksheets."
+  },
+  {
+    id: 4,
+    name: "One-click from product page",
+    codename: "PATH-ONE-CLICK",
+    complexity: "Simple",
+    steps: ["Product", "Confirmation"],
+    description: "Intelligent layout shortcut immediately generating purchases from registered customer credentials with 1-click."
+  },
+  {
+    id: 5,
+    name: "Account-created-at-checkout path",
+    codename: "PATH-REGISTER-AT-CHECKOUT",
+    complexity: "Complex",
+    steps: ["Add to Cart", "Checkout", "Register", "Shipping", "Payment", "Confirmation"],
+    description: "Prompts unregistered user to create password profiles during active secure address input stages."
+  },
+  {
+    id: 6,
+    name: "Social login path",
+    codename: "PATH-SOCIAL-LOGIN",
+    complexity: "Medium",
+    steps: ["Cart", "Checkout", "Social Login", "Shipping", "Payment", "Confirmation"],
+    description: "OAuth-based profile synchronization during checkout. Fast-tracks standard profile credentials & shipping."
+  },
+  {
+    id: 7,
+    name: "Coupon / promo path",
+    codename: "PATH-PROMO-COUPON",
+    complexity: "Medium",
+    steps: ["Product", "Cart", "Promo Code", "Checkout", "Payment", "Confirmation"],
+    description: "Dynamic recalculation. Validates that coupon discounts recalculate total prices accurately across all state layers."
+  },
+  {
+    id: 8,
+    name: "Buy-now-pay-later path",
+    codename: "PATH-BNPL-INSTALLMENTS",
+    complexity: "Complex",
+    steps: ["Cart", "Checkout", "Redirection", "Confirmation"],
+    description: "Redirects pipeline temporarily to BNPL providers (Klarna/Afterpay) on external credit approval screens."
+  },
+  {
+    id: 9,
+    name: "Subscription / subscribe-and-save path",
+    codename: "PATH-SUBCRIPTION-RECURRING",
+    complexity: "Complex",
+    steps: ["Product", "Subscribe", "Cart", "Checkout", "Payment", "Confirmation"],
+    description: "Configures recurring settlement intervals and auto-ships rules. Secures subscription records in inventory hooks."
+  },
+  {
+    id: 10,
+    name: "Wishlist deferral path",
+    codename: "PATH-WISHLIST-RESTORE",
+    complexity: "Medium",
+    steps: ["Product", "Wishlist", "Cart", "Checkout", "Payment", "Confirmation"],
+    description: "Stores items inside wishlist. Returns to checkout pipeline when customer initiates basket restoration sweeps."
+  },
+  {
+    id: 11,
+    name: "Failed-payment retry path",
+    codename: "PATH-PAYMENT-RETRY",
+    complexity: "Complex",
+    steps: ["Cart", "Checkout", "Payment", "Card Declined", "Payment", "Confirmation"],
+    description: "Handles card decline error codes. Allows user retry workflows immediately without dropping active cart."
+  },
+  {
+    id: 12,
+    name: "Abandon-and-recover path",
+    codename: "PATH-ABANDON-RECOVERY",
+    complexity: "Complex",
+    steps: ["Add to Cart", "Checkout", "Redirection", "Confirmation"],
+    description: "Identifies cart abandonment. Retores identical basket variables through custom deep links."
+  }
+];
+
+function getStepIcon(label: string) {
+  const l = label.toLowerCase();
+  if (l.includes("home")) return <Home className="w-3.5 h-3.5" />;
+  if (l.includes("search") || l.includes("category")) return <Search className="w-3.5 h-3.5" />;
+  if (l.includes("product") || l.includes("details")) return <ShoppingBag className="w-3.5 h-3.5" />;
+  if (l.includes("cart") || l.includes("basket")) return <ShoppingBag className="w-3.5 h-3.5" />;
+  if (l.includes("checkout")) return <Lock className="w-3.5 h-3.5" />;
+  if (l.includes("shipping") || l.includes("address")) return <Truck className="w-3.5 h-3.5" />;
+  if (l.includes("payment") || l.includes("pay") || l.includes("card") || l.includes("stripe")) return <CreditCard className="w-3.5 h-3.5" />;
+  if (l.includes("promo") || l.includes("coupon")) return <Percent className="w-3.5 h-3.5" />;
+  if (l.includes("login") || l.includes("account") || l.includes("social") || l.includes("google") || l.includes("register")) return <User className="w-3.5 h-3.5" />;
+  if (l.includes("failed") || l.includes("declined") || l.includes("error")) return <ShieldAlert className="w-3.5 h-3.5 text-rose-500" />;
+  if (l.includes("confirmation") || l.includes("placed") || l.includes("success")) return <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />;
+  return <Compass className="w-3.5 h-3.5" />;
+}
+
+// PREMIUM MULTI-PIECE MULTI-VISUAL INTERACTIVE CHECKOUT PATHS WIDGET
+export function CheckoutPathsVisualizer() {
+  const [selectedPathId, setSelectedPathId] = useState<number>(1);
+  const [activeStepIdx, setActiveStepIdx] = useState<number>(0);
+  const [isRunningVerification, setIsRunningVerification] = useState<boolean>(false);
+  const [verificationLogs, setVerificationLogs] = useState<string[]>([]);
+
+  const activePath = useMemo(() => {
+    return CHECKOUT_PATHS.find(p => p.id === selectedPathId) || CHECKOUT_PATHS[0];
+  }, [selectedPathId]);
+
+  // Handle switching path - resets active step to 0
+  const handlePathSelect = (id: number) => {
+    setSelectedPathId(id);
+    setActiveStepIdx(0);
+    setVerificationLogs([]);
+  };
+
+  // Run mock automated path verification triggers
+  const runPathVerification = () => {
+    if (isRunningVerification) return;
+    setIsRunningVerification(true);
+    setActiveStepIdx(0);
+    
+    const logs: string[] = [
+      `🚀 Initializing automated test pipeline for "${activePath.name}"...`,
+      `🔧 Resolving standard graph edge assertions against Intellion-Core schemas...`,
+    ];
+    setVerificationLogs(logs);
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+      if (currentStep < activePath.steps.length) {
+        const stepLabel = activePath.steps[currentStep];
+        setActiveStepIdx(currentStep);
+        setVerificationLogs(prev => [
+          ...prev,
+          `✓ [PASS] Validated step ${currentStep + 1}/${activePath.steps.length}: "${stepLabel}" element layout matches specified assertions`
+        ]);
+        currentStep++;
+      } else {
+        setVerificationLogs(prev => [
+          ...prev,
+          `🎉 Pipeline execution COMPLETE! Verified all transitions matches target constraints. State is fully COHERENT.`
+        ]);
+        setIsRunningVerification(false);
+        clearInterval(interval);
+      }
+    }, 600);
+  };
+
+  const renderMockViewportContent = (stepLabel: string) => {
+    const s = stepLabel.toLowerCase();
+    
+    if (s.includes("home")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <div className="flex justify-between items-center bg-slate-900 text-white p-2 text-[10px] rounded">
+            <span className="font-extrabold font-mono text-[9px]">INTELLION STORE</span>
+            <div className="flex gap-1.5 text-[8px] opacity-80">
+              <span>Offers</span>
+              <span>Deals</span>
+            </div>
+          </div>
+          <div className="bg-slate-100 p-3 rounded-lg text-center space-y-1">
+            <span className="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Summer Sale Active</span>
+            <h5 className="text-[11px] font-black tracking-tight text-slate-900 leading-tight">Get up to 40% off standard sound rigs</h5>
+          </div>
+          <div className="relative">
+            <Search className="w-3 h-3 absolute left-2.5 top-2 text-slate-400" />
+            <input type="text" placeholder="Search standard products..." disabled className="w-full pl-7 pr-3 py-1 bg-slate-50 border border-slate-200 rounded text-[10px]" />
+          </div>
+        </div>
+      );
+    }
+    
+    if (s.includes("search") || s.includes("category")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <div className="bg-slate-100 p-1.5 px-2.5 rounded flex justify-between items-center text-[10px] border border-slate-250 font-bold text-slate-600">
+            <span>Query: "headset"</span>
+            <span className="font-mono text-[9px] text-indigo-600 font-extrabold">3 results found</span>
+          </div>
+          <div className="space-y-1">
+            <div className="p-2 bg-white rounded border border-indigo-100 flex items-center justify-between text-[10.5px]">
+              <span className="font-bold flex items-center gap-1.5"><Play className="w-2.5 h-2.5 text-indigo-500" /> Wireless Rig Pro</span>
+              <span className="font-mono font-bold text-slate-800">$120.00</span>
+            </div>
+            <div className="p-2 bg-slate-50 rounded border border-slate-100 flex items-center justify-between text-[10.5px] opacity-75">
+              <span className="font-bold text-slate-500">Retro Sound Hub</span>
+              <span className="font-mono text-slate-400">$75.00</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("product") || s.includes("details")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <div className="aspect-video bg-slate-200 rounded-lg flex items-center justify-center relative overflow-hidden">
+            <ShoppingBag className="w-8 h-8 text-slate-400 animate-pulse" />
+            <span className="absolute bottom-1 bg-white/70 px-1.5 py-0.5 text-[8.5px] font-bold tracking-tight text-slate-700 uppercase rounded">Item Catalog #921</span>
+          </div>
+          <div className="flex justify-between items-start">
+            <div>
+              <h4 className="text-[11px] font-extrabold text-slate-900 leading-tight">Wireless Sound Pro</h4>
+              <p className="text-[9.5px] text-slate-400">High-fidelity smart audio system</p>
+            </div>
+            <span className="text-xs font-black font-mono text-indigo-600">$120.00</span>
+          </div>
+          <button className="w-full py-1 text-center bg-slate-900 text-white font-extrabold text-[10px] rounded-lg tracking-tight hover:bg-indigo-600 transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <ShoppingBag className="w-3 h-3" />
+            <span>Add to Cart</span>
+          </button>
+        </div>
+      );
+    }
+
+    if (s.includes("add to cart") || s.includes("added")) {
+      return (
+        <div className="space-y-3 text-slate-800 text-center py-2 font-sans">
+          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 animate-bounce">
+            <Check className="w-4 h-4 stroke-[3]" />
+          </div>
+          <div className="space-y-0.5">
+            <h5 className="text-[11px] font-black text-slate-905">Added to Basket!</h5>
+            <p className="text-[9px] text-slate-400">Wireless Sound Pro added successfully</p>
+          </div>
+          <div className="bg-indigo-50 border border-indigo-100 rounded-lg p-1.5 flex justify-between items-center text-[10px] font-bold text-indigo-950 font-sans">
+            <span>Cart Badge Total:</span>
+            <span className="px-2 py-0.5 bg-indigo-600 text-white rounded font-mono font-black animate-pulse">1</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("cart") || s.includes("basket")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <h5 className="text-[10px] font-extrabold text-slate-900 uppercase tracking-tight border-b border-slate-100 pb-1">Cart Summary</h5>
+          <div className="flex justify-between items-center bg-white p-2 rounded border border-slate-200">
+            <div className="text-[10px]">
+              <p className="font-extrabold text-slate-800">Wireless Sound Pro</p>
+              <p className="text-[9px] text-slate-400">Qty: 1</p>
+            </div>
+            <span className="font-mono text-[10.5px] font-extrabold text-slate-800">$120.00</span>
+          </div>
+          <div className="bg-slate-50 p-2 rounded-lg space-y-1 border border-slate-100">
+            <div className="flex justify-between font-mono text-[9px] text-slate-500">
+              <span>Subtotal:</span>
+              <span>$120.00</span>
+            </div>
+            <div className="flex justify-between font-mono text-[10px] font-black text-slate-800">
+              <span>Total Credit:</span>
+              <span>$120.00</span>
+            </div>
+          </div>
+          <button className="w-full py-1 bg-indigo-600 text-white font-black text-[10px] rounded-lg flex items-center justify-center gap-1.5 cursor-pointer">
+            <Lock className="w-3 h-3" />
+            <span>Process Raw Checkout</span>
+          </button>
+        </div>
+      );
+    }
+
+    if (s.includes("guest checkout") || s.includes("checkout")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
+            <Lock className="w-3 h-3 text-indigo-500" />
+            <h5 className="text-[10px] font-extrabold uppercase text-slate-800">Secure Checkout Gate</h5>
+          </div>
+          <div className="space-y-2">
+            <div className="space-y-1">
+              <label className="text-[8.5px] font-extrabold text-slate-500 block">EMAIL PROTOCOL</label>
+              <input type="text" placeholder="guest@domain.com" disabled className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-[9px]" />
+            </div>
+            <div className="flex gap-2">
+              <button className="flex-1 py-1 text-center border border-slate-200 rounded-lg text-[9px] font-extrabold text-slate-600 hover:bg-slate-100 transition cursor-pointer">
+                Sign In
+              </button>
+              <button className="flex-1 py-1 text-center bg-indigo-600 text-white rounded-lg text-[9px] font-black hover:bg-indigo-700 transition shadow-xs cursor-pointer">
+                As Guest
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("shipping") || s.includes("saved address")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <h5 className="text-[10px] font-extrabold uppercase text-slate-800 border-b border-slate-100 pb-1">Delivery Protocol</h5>
+          <div className="space-y-1.5 border border-indigo-100 rounded bg-indigo-50/10 p-1.5">
+            <div className="flex items-center gap-1.5">
+              <input type="radio" defaultChecked disabled className="text-indigo-600" />
+              <div className="text-[9.5px]">
+                <p className="font-bold text-slate-800">Home Direct (1-3 Days)</p>
+                <p className="text-[8.5px] text-slate-400 truncate max-w-[170px]">102 Cloud Run Server Lane, Container Vault</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-0.5">
+            <label className="text-[8px] font-extrabold text-slate-500 block">RECEIVER NAME</label>
+            <input type="text" placeholder="Dr. Antigravity Agent" disabled className="w-full p-1 bg-slate-100 border border-slate-200 rounded text-[9px]" />
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("payment") || s.includes("saved card")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <div className="flex justify-between items-center border-b border-slate-100 pb-1">
+            <h5 className="text-[10px] font-extrabold uppercase text-slate-850">Billing Interface</h5>
+            <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
+          </div>
+          <div className="space-y-1.5 bg-slate-50 p-2 rounded-lg border border-slate-150">
+            <div className="space-y-0.5">
+              <label className="text-[8px] font-extrabold text-slate-450 block font-mono">ENCRYPTED CARD PAYLOAD</label>
+              <div className="flex justify-between items-center bg-white p-1 border border-slate-150 rounded text-[9.5px] font-mono font-bold text-slate-700">
+                <span>•••• •••• •••• 9012</span>
+                <span className="text-[8px] text-slate-400">12/28</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-0.5">
+                <input type="text" placeholder="CVV" disabled className="w-full p-1 bg-white border border-slate-150 text-[9px] text-center rounded font-mono font-bold" />
+              </div>
+              <div className="space-y-0.5">
+                <input type="text" placeholder="ZIP" disabled className="w-full p-1 bg-white border border-slate-150 text-[9px] text-center rounded font-mono font-bold" />
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("promo") || s.includes("coupon")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <h5 className="text-[10px] font-extrabold uppercase text-slate-800">Promo Gateway</h5>
+          <div className="p-2 border border-dashed border-emerald-300 rounded bg-emerald-50/10 text-center space-y-1">
+            <span className="text-[9.5px] font-mono font-bold text-emerald-800 uppercase bg-emerald-100 px-1.5 py-0.5 rounded">SAVE40</span>
+            <p className="text-[8.5px] text-slate-450 leading-snug">Success! Dynamic coupon applied. Total deduction value is $48.00</p>
+          </div>
+          <div className="flex justify-between items-center bg-slate-50 p-1.5 px-2 rounded border border-slate-150 text-[10px] font-mono font-bold text-slate-550">
+            <span>Deduction:</span>
+            <span className="text-emerald-600 font-extrabold">-$48.00</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("review")) {
+      return (
+        <div className="space-y-1.5 text-slate-800 font-sans">
+          <h5 className="text-[10px] font-extrabold uppercase text-slate-800 border-b border-slate-100 pb-1">Final Settlement Match</h5>
+          <div className="space-y-1 text-[9.5px] font-medium text-slate-500">
+            <div className="flex justify-between">
+              <span>Item value:</span>
+              <span className="font-mono text-slate-700">$120.00</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Delivery Code:</span>
+              <span className="text-emerald-600 uppercase font-black text-[8.5px]">FREE TIER</span>
+            </div>
+            <div className="flex justify-between border-t border-slate-100 pt-1 text-[10px] font-black text-slate-900 font-mono">
+              <span>Settlement Total:</span>
+              <span>$120.00</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("wallet sheet") || s.includes("apple pay")) {
+      return (
+        <div className="space-y-2 text-slate-800 bg-black text-white p-3 rounded-xl text-center font-sans">
+          <div className="flex justify-center items-center gap-1.5 border-b border-zinc-800 pb-1">
+            <span className="text-[11px] font-black tracking-tight flex items-center gap-1"> Pay</span>
+            <span className="text-[8px] text-zinc-500 uppercase bg-zinc-900 px-1 rounded">EXPRESS</span>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[9px] text-zinc-400 font-bold">Double Click Side Button to Confirm</p>
+            <p className="text-[8px] text-indigo-400 animate-pulse">Security enclave verification...</p>
+          </div>
+          <div className="bg-zinc-900 p-1.5 rounded text-[9.5px] space-y-1 font-mono text-left text-zinc-300">
+            <div className="flex justify-between text-zinc-500">
+              <span>Address:</span>
+              <span className="truncate max-w-[100px]">Auto-filled standard card...</span>
+            </div>
+            <div className="flex justify-between text-emerald-400 font-bold">
+              <span>Debit:</span>
+              <span>$120.00</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("redirect") || s.includes("klarna") || s.includes("afterpay")) {
+      return (
+        <div className="space-y-2 text-center text-slate-805 py-2 font-sans">
+          <span className="px-1.5 py-0.5 bg-rose-100 text-rose-800 text-[9px] font-black rounded font-mono">KLARNA SPLIT</span>
+          <p className="text-[8.5px] text-slate-400 leading-snug">Connecting external installments gateway...</p>
+          <div className="flex items-center gap-1.5 justify-center text-[9.5px] font-bold text-slate-650">
+            <Loader2 className="w-2.5 h-2.5 text-rose-500 animate-spin" />
+            <span>Process billing schema...</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("register") || s.includes("create an account")) {
+      return (
+        <div className="space-y-2 text-slate-800 font-sans">
+          <h5 className="text-[10px] font-extrabold uppercase text-slate-800 border-b border-slate-100 pb-1">Register Customer Account</h5>
+          <div className="space-y-1">
+            <input type="text" placeholder="Set password credential..." disabled className="w-full p-1 bg-slate-50 border border-slate-200 rounded text-[9px]" />
+            <div className="flex gap-1.5 items-center pt-0.5">
+              <input type="checkbox" defaultChecked disabled className="text-indigo-600 rounded" />
+              <label className="text-[8px] text-slate-400">Opt-in weekly promotions ledger</label>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("wishlist") || s.includes("deferral")) {
+      return (
+        <div className="space-y-2 text-slate-800 text-center py-2 font-sans">
+          <div className="w-7 h-7 rounded-full bg-rose-50 flex items-center justify-center mx-auto text-rose-500">
+            <Star className="w-4 h-4 fill-rose-500" />
+          </div>
+          <div className="space-y-0.5">
+            <h5 className="text-[10.5px] font-black text-rose-950">Moved to Wishlist Deferral</h5>
+            <p className="text-[8.5px] text-slate-400">Synchronized item context safely in offline cache</p>
+          </div>
+        </div>
+      );
+    }
+
+    if (s.includes("declined") || s.includes("error") || s.includes("card declined")) {
+      return (
+        <div className="space-y-2 text-slate-850 font-sans">
+          <div className="p-1.5 border border-rose-300 rounded bg-rose-50 text-center space-y-1">
+            <ShieldAlert className="w-4 h-4 text-rose-500 mx-auto animate-pulse" />
+            <h5 className="text-[10px] font-black text-rose-950">Payment Session Declined</h5>
+            <p className="text-[8px] text-rose-700 leading-snug">Insufficient funds status or unverified CVV error.</p>
+          </div>
+          <button className="w-full py-1 bg-rose-600 hover:bg-rose-700 text-white font-extrabold text-[9.5px] rounded-lg cursor-pointer">
+            Retry Another Account Card
+          </button>
+        </div>
+      );
+    }
+
+    if (s.includes("confirmation") || s.includes("order placed") || s.includes("success")) {
+      return (
+        <div className="space-y-2.5 text-slate-800 text-center py-2 font-sans">
+          <div className="w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center mx-auto text-white shadow-sm animate-pulse">
+            <Check className="w-5 h-5 stroke-[3]" />
+          </div>
+          <div className="space-y-0.5">
+            <h5 className="text-[11px] font-black text-slate-900 leading-tight">Order Confirmed!</h5>
+            <p className="font-mono text-[8.5px] text-indigo-600 font-extrabold">ID: #ORD-12908</p>
+          </div>
+          <p className="text-[8.5px] text-slate-400 leading-normal">
+            ✨ Transaction complete. Inventory hooks triggered standard warehouse dispatch successfully.
+          </p>
+        </div>
+      );
+    }
+
+    // Default Fallback
+    return (
+      <div className="space-y-2 text-center text-slate-450 py-3 font-sans">
+        <Compass className="w-6 h-6 text-slate-300 mx-auto animate-spin" />
+        <p className="text-[9px] font-bold text-slate-700 mt-1 uppercase">{stepLabel}</p>
+        <p className="text-[8px] leading-tight">Simulation schema verified. Click node elements to refresh viewport.</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="mt-4 bg-slate-900 border border-slate-950 text-slate-100 rounded-2xl p-5 shadow-lg space-y-4 font-sans animate-in fade-in zoom-in-95 duration-200">
+      
+      {/* Visualizer header section */}
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-800 pb-3">
+        <div className="space-y-0.5">
+          <div className="flex items-center gap-2">
+            <span className="p-1 text-white bg-indigo-600 animate-pulse rounded text-[9px] font-black uppercase tracking-wider font-mono">LIVE INTEGRATION</span>
+            <h4 className="text-[13px] font-extrabold text-white tracking-tight flex items-center gap-1.5">
+              <Compass className="w-4 h-4 text-indigo-400" />
+              Checkout Paths Verification Sandbox
+            </h4>
+          </div>
+          <p className="text-[10px] text-slate-450">Select and trace any of the 12 verified checkout pipelines interactively.</p>
+        </div>
+
+        <button
+          onClick={runPathVerification}
+          disabled={isRunningVerification}
+          className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 disabled:text-slate-500 font-black text-[10px] rounded-lg flex items-center gap-1.5 transition self-start sm:self-center cursor-pointer shadow-sm text-white"
+        >
+          <Cpu className={`w-3.5 h-3.5 ${isRunningVerification ? 'animate-spin text-indigo-300' : 'text-indigo-100'}`} />
+          <span>{isRunningVerification ? "Executing Trace..." : "Trace Pipeline"}</span>
+        </button>
+      </div>
+
+      {/* Grid selector of the 12 paths */}
+      <div className="space-y-1.5">
+        <span className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest block font-mono">Select standard path pipeline:</span>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 max-h-[140px] overflow-y-auto pr-1">
+          {CHECKOUT_PATHS.map((path) => {
+            const isSelected = selectedPathId === path.id;
+            return (
+              <button
+                key={path.id}
+                onClick={() => handlePathSelect(path.id)}
+                className={`p-2 rounded-xl text-left border text-[10.5px] transition-all cursor-pointer truncate ${
+                  isSelected 
+                    ? 'bg-slate-800 border-indigo-500 text-white shadow-xs font-bold ring-1 ring-indigo-500/20' 
+                    : 'bg-slate-950 hover:bg-slate-800/50 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 justify-between">
+                  <span className="text-[8.5px] font-mono opacity-60">#{path.id.toString().padStart(2, '0')}</span>
+                  <span className={`w-1 h-1 rounded-full ${
+                    path.complexity === 'Simple' ? 'bg-emerald-400' : path.complexity === 'Medium' ? 'bg-amber-400' : 'bg-rose-400'
+                  }`} />
+                </div>
+                <p className="truncate mt-0.5">{path.name}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Primary details horizontal columns */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+        
+        {/* Left Section: Details & Graphic Steps (8 cols) */}
+        <div className="md:col-span-8 space-y-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+          
+          <div className="flex justify-between items-start gap-1 pb-2 border-b border-slate-800/50">
+            <div>
+              <h5 className="text-[12px] font-black text-white">{activePath.name}</h5>
+              <p className="text-[9.5px] text-slate-400 font-mono mt-0.5">{activePath.codename}</p>
+            </div>
+            <div className="flex items-center gap-1.5 text-[9px] font-mono">
+              <span className="px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-300">
+                Steps: <strong>{activePath.steps.length}</strong>
+              </span>
+              <span className={`px-1.5 py-0.5 rounded font-black ${
+                activePath.complexity === 'Simple' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                activePath.complexity === 'Medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+              }`}>
+                {activePath.complexity.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          <p className="text-[10px] text-slate-400 leading-normal">
+            {activePath.description}
+          </p>
+
+          {/* Graphical Flow Trace map */}
+          <div className="space-y-2">
+            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block font-mono">Interactive flowchart:</span>
+            
+            <div className="relative p-1 overflow-x-auto">
+              <div className="flex items-center gap-2 min-w-max pb-2">
+                {activePath.steps.map((step, idx) => {
+                  const isActive = idx === activeStepIdx;
+                  const isPassed = idx < activeStepIdx;
+                  return (
+                    <React.Fragment key={idx}>
+                      {/* Connection line */}
+                      {idx > 0 && (
+                        <div className="relative w-4 h-0.5 shrink-0 bg-slate-800">
+                          {isPassed && (
+                            <div className="absolute inset-0 bg-indigo-500 animate-pulse" />
+                          )}
+                        </div>
+                      )}
+
+                      {/* Step node */}
+                      <button
+                        onClick={() => setActiveStepIdx(idx)}
+                        className={`group flex flex-col items-center shrink-0 cursor-pointer transition-all duration-200 relative ${
+                          isActive 
+                            ? 'scale-105 filter drop-shadow-[0_0_8px_rgba(99,102,241,0.4)]' 
+                            : 'opacity-70 hover:opacity-100'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                          isActive 
+                            ? 'bg-indigo-600 border-2 border-white text-white' 
+                            : isPassed 
+                              ? 'bg-slate-850 border border-indigo-500 text-indigo-400' 
+                              : 'bg-slate-900 border border-slate-800 text-slate-500'
+                        }`}>
+                          {getStepIcon(step)}
+                        </div>
+                        <span className={`text-[9px] font-extrabold mt-1.5 transition-all text-center ${
+                          isActive ? 'text-indigo-400' : 'text-slate-400'
+                        }`}>
+                          {step}
+                        </span>
+                        <span className="text-[7.5px] font-mono text-slate-600 group-hover:text-slate-500 mt-0.5">
+                          Step {idx + 1}
+                        </span>
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Section: Visual UI Viewport Simulator & Verification (4 cols) */}
+        <div className="md:col-span-4 space-y-4">
+          
+          {/* Simulated view component */}
+          <div className="bg-white border border-slate-800 p-3.5 rounded-xl space-y-2 h-[220px] shadow-inner text-slate-900 flex flex-col justify-between overflow-y-auto">
+            <div className="flex justify-between items-center text-[8px] font-mono bg-slate-100 text-slate-500 p-1 rounded border border-slate-200 uppercase">
+              <span>LIVE VIEWER SIMULATION</span>
+              <span className="font-extrabold text-indigo-600">STATE: ACTIVE</span>
+            </div>
+            
+            <div className="flex-1 flex flex-col justify-center py-2">
+              {renderMockViewportContent(activePath.steps[activeStepIdx])}
+            </div>
+
+            <div className="text-center text-[8.5px] text-slate-400 italic">
+              * Simulating interaction details for "{activePath.steps[activeStepIdx]}"
+            </div>
+          </div>
+
+          {/* Quick automation logs display */}
+          <div className="bg-slate-950 border border-slate-850 rounded-xl p-3 h-[90px] overflow-y-auto font-mono text-[8.5px] text-emerald-400 space-y-1 scrollbar-thin">
+            {verificationLogs.length === 0 ? (
+              <p className="text-slate-500 italic text-center py-4">Click "Trace Pipeline" to run automated state validations log...</p>
+            ) : (
+              verificationLogs.map((log, lidx) => (
+                <p key={lidx} className="leading-tight">{log}</p>
+              ))
+            )}
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
   );
 }
