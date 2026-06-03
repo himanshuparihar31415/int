@@ -1,0 +1,6 @@
+{
+  "name": "Intellion",
+  "description": "Autonomous knowledge domain agent that maps web schemas, tracks conceptual entities, and validates consistency logs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
